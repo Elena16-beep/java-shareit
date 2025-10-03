@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.dao;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,20 +46,11 @@ public class ItemRepositoryImpl implements ItemRepository {
         List<Item> itemList = new ArrayList<>();
         String lowerText = text.toLowerCase();
         for (Item item : items.values()) {
-
-//            System.out.println("item " + item);
-//            System.out.println("item.isAvailable() " + item.isAvailable());
-//            System.out.println("item.getName() " + item.getName());
-//            System.out.println("item.getDescription() " + item.getDescription());
-//            System.out.println("lowerText " + lowerText);
-
             if (item.isAvailable() && (item.getName().toLowerCase().contains(lowerText)
                 || item.getDescription().toLowerCase().contains(lowerText))) {
                 itemList.add(item);
             }
         }
-
-//        System.out.println("itemList " + itemList);
 
         return itemList;
     }

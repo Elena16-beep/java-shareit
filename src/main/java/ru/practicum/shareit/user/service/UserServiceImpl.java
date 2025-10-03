@@ -24,31 +24,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(Long userId, UserDto userDto) {
-        Boolean isSameEmail = false;
+        boolean isSameEmail = false;
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
-        System.out.println("existingUser!!!!!!!!!!!!!!!!!!!!!! " + existingUser);
-        System.out.println("userDto!!!!!!!!!!!!!!!!!!!!!! " + userDto.getEmail());
-
         if (userDto.getName() != null) {
-            isSameEmail = existingUser.getEmail().equals(userDto.getEmail());
             existingUser.setName(userDto.getName());
         }
 
         if (userDto.getEmail() != null) {
-
+            isSameEmail = existingUser.getEmail().equals(userDto.getEmail());
             existingUser.setEmail(userDto.getEmail());
         }
 
         existingUser = userRepository.save(existingUser, isSameEmail);
 
-//        existingUser = userRepository.save(existingUser, userDto);
-
         return UserMapper.mapToUserDto(existingUser);
-
-//        return UserMapper.mapToUserDto(userRepository.save(userDto));
-
     }
 
     @Override

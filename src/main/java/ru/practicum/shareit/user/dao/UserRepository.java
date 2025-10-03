@@ -1,8 +1,6 @@
 package ru.practicum.shareit.user.dao;
 
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.dto.UserDto;
-
 import java.util.Optional;
 
 public interface UserRepository {

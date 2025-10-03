@@ -29,7 +29,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long ownerId, Long itemId, ItemDto itemDto) {
-//        validateItem(itemId);
         validateUser(ownerId);
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id = " + itemId + " не найдена"));
@@ -57,7 +56,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long itemId) {
-//        validateItem(itemId);
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id = " + itemId + " не найдена"));
 
@@ -76,9 +74,6 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return List.of();
         }
-
-//        System.out.println("text " + text);
-
 
         return itemRepository.search(text).stream()
                 .map(ItemMapper::mapToItemDto)
