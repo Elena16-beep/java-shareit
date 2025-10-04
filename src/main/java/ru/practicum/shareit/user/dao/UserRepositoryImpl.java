@@ -16,7 +16,7 @@ public class UserRepositoryImpl implements UserRepository {
     public User save(User user, Boolean isSameEmail) {
         if (user.getId() == null) {
             if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
-                throw new InternalServerException("s Пользователь с email " + user.getEmail() + " уже существует");
+                throw new InternalServerException("Пользователь с email " + user.getEmail() + " уже существует");
             }
 
             user.setId(getNextId());
@@ -24,7 +24,7 @@ public class UserRepositoryImpl implements UserRepository {
             if (user.getEmail() != null && !isSameEmail) {
                 if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail())
                         && !u.getId().equals(user.getId()))) {
-                    throw new InternalServerException("u Пользователь с email " + user.getEmail() + " уже существует");
+                    throw new InternalServerException("Пользователь с email " + user.getEmail() + " уже существует");
                 }
             }
         }
