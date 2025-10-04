@@ -1,6 +1,6 @@
 package ru.practicum.shareit.user.dao;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.InternalServerException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.User;
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Component
+@Repository
 public class UserRepositoryImpl implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
 
@@ -20,12 +20,10 @@ public class UserRepositoryImpl implements UserRepository {
             }
 
             user.setId(getNextId());
-        }
-
-        if (user.getId() != null) {
+        } else {
             if (user.getEmail() != null && !isSameEmail) {
                 if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail())
-                && !u.getId().equals(user.getId()))) {
+                        && !u.getId().equals(user.getId()))) {
                     throw new InternalServerException("u Пользователь с email " + user.getEmail() + " уже существует");
                 }
             }
