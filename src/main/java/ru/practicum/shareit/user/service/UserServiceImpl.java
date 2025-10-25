@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.InternalServerException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.dao.UserRepositoryJpa;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -19,7 +18,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto add(UserDto userDto) {
         User user = UserMapper.mapToUser(userDto);
-//        user = userRepository.save(user, false);
 
         if (userRepository.findAll().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
             throw new InternalServerException("Пользователь с email " + userDto.getEmail() + " уже существует");
@@ -53,7 +51,6 @@ public class UserServiceImpl implements UserService {
             existingUser.setEmail(userDto.getEmail());
         }
 
-//        existingUser = userRepository.save(existingUser, isSameEmail);
         existingUser = userRepository.save(existingUser);
 
         return UserMapper.mapToUserDto(existingUser);

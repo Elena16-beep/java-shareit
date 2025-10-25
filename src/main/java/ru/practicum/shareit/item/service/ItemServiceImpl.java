@@ -2,10 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dao.BookingRepositoryJpa;
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.CommentRepositoryJpa;
@@ -19,7 +16,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dao.UserRepositoryJpa;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,34 +78,6 @@ public class ItemServiceImpl implements ItemService {
 
         ItemDto itemDto = ItemMapper.mapToItemDto(existingItem);
         itemDto.setComments(commentDto);
-
-        List<Booking> last = bookingRepository.findAllByItem(existingItem)
-                .stream()
-                .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now()))
-                .toList();
-
-        if (!last.isEmpty()) {
-            BookingDto lastBooking = BookingMapper.mapToBookingDto(
-                    last.stream()
-                    .sorted(Comparator.comparing(Booking::getEnd))
-                    .toList()
-                    .getLast());
-//            itemDto.setLastBooking(lastBooking);
-        }
-
-        List<Booking> next = bookingRepository.findAllByItem(existingItem)
-                .stream()
-                .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
-                .toList();
-
-        if (!next.isEmpty()) {
-            BookingDto nextBooking = BookingMapper.mapToBookingDto(
-                    next.stream()
-                    .sorted(Comparator.comparing(Booking::getStart))
-                    .toList()
-                    .getFirst());
-//            itemDto.setNextBooking(nextBooking);
-        }
 
         return itemDto;
     }
