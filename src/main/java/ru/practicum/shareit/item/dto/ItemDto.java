@@ -3,6 +3,8 @@ package ru.practicum.shareit.item.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import java.util.List;
 
 /**
  * DTO-объект вещи Item.
@@ -23,4 +25,10 @@ public class ItemDto {
     private Boolean available;
 
     private Long ownerId;
+
+    private BookingDto lastBooking;
+
+    private BookingDto nextBooking;
+
+    private List<CommentDto> comments;
 }
