@@ -32,9 +32,9 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepositoryJpa bookingRepository;
 
     @Override
-    public ItemDto addItem(Long userId, ItemDto itemDto) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+    public ItemDto addItem(Long ownerId, ItemDto itemDto) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
         Item item = ItemMapper.mapToItem(itemDto, owner);
         item = itemRepository.save(item);

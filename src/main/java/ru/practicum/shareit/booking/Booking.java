@@ -19,10 +19,10 @@ import java.time.LocalDateTime;
 /**
  * TODO Sprint add-bookings.
  */
-    @Data
-    @Entity
-    @Table(name = "bookings")
-    public class Booking {
+@Data
+@Entity
+@Table(name = "bookings")
+public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
