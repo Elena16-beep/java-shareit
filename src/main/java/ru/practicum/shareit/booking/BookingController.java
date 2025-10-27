@@ -42,19 +42,23 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    public BookingDto getBooking(
+    public BookingDto getBookingById(
             @PathVariable Long bookingId,
             @RequestHeader("X-Sharer-User-Id") Long userId) {
         return bookingService.getById(bookingId, userId);
     }
 
     @GetMapping("/owner")
-    public List<BookingDto> getBookingByOwner(@RequestHeader("X-Sharer-User-Id") Long ownerId) {
-        return bookingService.getByOwner(ownerId);
+    public List<BookingDto> getBookingByOwner(
+            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @RequestParam(defaultValue = "ALL") String state) {
+        return bookingService.getByOwner(ownerId, state);
     }
 
     @GetMapping
-    public List<BookingDto> getBookingByUser(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return bookingService.getByUser(userId);
+    public List<BookingDto> getBookingByUser(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestParam(defaultValue = "ALL") String state) {
+        return bookingService.getByUser(userId, state);
     }
 }

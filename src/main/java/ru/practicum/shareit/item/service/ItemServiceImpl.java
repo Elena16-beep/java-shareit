@@ -2,7 +2,9 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dao.BookingRepositoryJpa;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.CommentRepositoryJpa;
@@ -17,6 +19,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dao.UserRepositoryJpa;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,9 +32,9 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepositoryJpa bookingRepository;
 
     @Override
-    public ItemDto addItem(Long ownerId, ItemDto itemDto) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
+    public ItemDto addItem(Long userId, ItemDto itemDto) {
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         Item item = ItemMapper.mapToItem(itemDto, owner);
         item = itemRepository.save(item);
@@ -67,7 +70,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {
+    public ItemDto getItemById(Long userId, Long itemId) {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id = " + itemId + " не найдена"));
 
@@ -76,8 +79,20 @@ public class ItemServiceImpl implements ItemService {
                 .map(CommentMapper::mapToCommentDto)
                 .collect(Collectors.toList());
 
+        validateUser(userId);
         ItemDto itemDto = ItemMapper.mapToItemDto(existingItem);
         itemDto.setComments(commentDto);
+
+        if (itemDto.getOwnerId().equals(userId)) {
+            Optional<Booking> lastBooking = bookingRepository
+                    .findFirstByItemIdAndEndBeforeOrderByEndDesc(itemId, LocalDateTime.now());
+
+            lastBooking.ifPresent(booking -> itemDto.setLastBooking(BookingMapper.mapToBookingDto(booking)));
+
+            Optional<Booking> nextBooking = bookingRepository
+                    .findFirstByItemIdAndStartAfterOrderByStart(itemId, LocalDateTime.now());
+            nextBooking.ifPresent(booking -> itemDto.setNextBooking(BookingMapper.mapToBookingDto(booking)));
+        }
 
         return itemDto;
     }
@@ -87,7 +102,29 @@ public class ItemServiceImpl implements ItemService {
         validateUser(ownerId);
 
         return itemRepository.findAllByOwnerId(ownerId).stream()
-                .map(ItemMapper::mapToItemDto)
+                .map(item -> {
+                    List<CommentDto> commentDto = commentRepository.findAllByItemId(item.getId())
+                            .stream()
+                            .map(CommentMapper::mapToCommentDto)
+                            .collect(Collectors.toList());
+
+                    ItemDto itemDto = ItemMapper.mapToItemDto(item);
+                    itemDto.setComments(commentDto);
+
+                    Optional<Booking> lastBooking = bookingRepository
+                            .findFirstByItemIdAndEndBeforeOrderByEndDesc(item.getId(), LocalDateTime.now());
+                    lastBooking.ifPresent(
+                            booking -> itemDto.setLastBooking(BookingMapper.mapToBookingDto(booking))
+                    );
+
+                    Optional<Booking> nextBooking = bookingRepository
+                            .findFirstByItemIdAndStartAfterOrderByStart(item.getId(), LocalDateTime.now());
+                    nextBooking.ifPresent(
+                            booking -> itemDto.setNextBooking(BookingMapper.mapToBookingDto(booking))
+                    );
+
+                    return itemDto;
+                })
                 .collect(Collectors.toList());
     }
 

@@ -82,28 +82,63 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto getById(Long bookingId, Long userId) {
-        validateUser(userId);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с id = " + bookingId + " не найдено"));
+
+        if (!booking.getItem().getOwner().getId().equals(userId)
+                && !booking.getBooker().getId().equals(userId)) {
+            throw new InternalServerException("""
+                    Получение данных о бронировании может быть выполнено либо автором бронирования,
+                    либо владельцем вещи, к которой относится бронирование
+                    """
+            );
+        }
+
+        validateUser(userId);
 
         return BookingMapper.mapToBookingDto(booking);
     }
 
     @Override
-    public List<BookingDto> getByOwner(Long ownerId) {
+    public List<BookingDto> getByOwner(Long ownerId, String state) {
         validateUser(ownerId);
+        List<Booking> bookings;
+        LocalDateTime currentDate = LocalDateTime.now();
 
-        return bookingRepository.findAllByItemOwnerId(ownerId).stream()
+        bookings = switch (state) {
+            case "CURRENT" -> bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfter(ownerId, currentDate, currentDate);
+            case "PAST" -> bookingRepository.findByItemOwnerIdAndEndBefore(ownerId, currentDate);
+            case "FUTURE" -> bookingRepository.findByItemOwnerIdAndStartAfter(ownerId, currentDate);
+            case "WAITING" -> bookingRepository.findByItemOwnerIdAndStatus(ownerId, BookingStatus.WAITING);
+            case "REJECTED" -> bookingRepository.findByItemOwnerIdAndStatus(ownerId, BookingStatus.REJECTED);
+            default -> bookingRepository.findAllByItemOwnerId(ownerId);
+        };
+
+        return bookings.stream()
+                .sorted((b1, b2) -> b2.getStart().compareTo(b1.getStart()))
                 .map(BookingMapper::mapToBookingDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<BookingDto> getByUser(Long userId) {
+    public List<BookingDto> getByUser(Long userId, String state) {
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
-        return bookingRepository.findAllByBooker(booker).stream()
+        List<Booking> bookings;
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        bookings = switch (state) {
+            case "CURRENT" -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(userId, currentDate, currentDate);
+            case "PAST" -> bookingRepository.findByBookerIdAndEndBefore(userId, currentDate);
+            case "FUTURE" -> bookingRepository.findByBookerIdAndStartAfter(userId, currentDate);
+            case "WAITING" -> bookingRepository.findByBookerIdAndStatus(userId, BookingStatus.WAITING);
+            case "REJECTED" -> bookingRepository.findByBookerIdAndStatus(userId, BookingStatus.REJECTED);
+            default -> bookingRepository.findAllByBooker(booker);
+        };
+
+        return bookings.stream()
+                .sorted((b1, b2) -> b2.getStart().compareTo(b1.getStart()))
                 .map(BookingMapper::mapToBookingDto)
                 .collect(Collectors.toList());
     }
