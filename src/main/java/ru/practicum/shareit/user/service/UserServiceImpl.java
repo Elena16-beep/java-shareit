@@ -2,9 +2,10 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.InternalServerException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.dao.UserRepositoryJpa;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 
@@ -12,12 +13,17 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryJpa userRepository;
 
     @Override
     public UserDto add(UserDto userDto) {
         User user = UserMapper.mapToUser(userDto);
-        user = userRepository.save(user, false);
+
+        if (userRepository.findAll().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
+            throw new InternalServerException("Пользователь с email " + userDto.getEmail() + " уже существует");
+        }
+
+        user = userRepository.save(user);
 
         return UserMapper.mapToUserDto(user);
     }
@@ -34,10 +40,18 @@ public class UserServiceImpl implements UserService {
 
         if (userDto.getEmail() != null) {
             isSameEmail = existingUser.getEmail().equals(userDto.getEmail());
+
+            if (!isSameEmail) {
+                if (userRepository.findAll().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail())
+                        && !u.getId().equals(userDto.getId()))) {
+                    throw new InternalServerException("Пользователь с email " + userDto.getEmail() + " уже существует");
+                }
+            }
+
             existingUser.setEmail(userDto.getEmail());
         }
 
-        existingUser = userRepository.save(existingUser, isSameEmail);
+        existingUser = userRepository.save(existingUser);
 
         return UserMapper.mapToUserDto(existingUser);
     }
@@ -52,6 +66,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(Long id) {
-        userRepository.delete(id);
+        userRepository.deleteById(id);
     }
 }

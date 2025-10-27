@@ -3,15 +3,16 @@ package ru.practicum.shareit.item.mapper;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 
 public class ItemMapper {
-    public static Item mapToItem(ItemDto itemDto, Long ownerId) {
+    public static Item mapToItem(ItemDto itemDto, User owner) {
         if (itemDto == null) {
             throw new NotFoundException("ItemDto cannot be null");
         }
 
-        if (ownerId == null) {
-            throw new NotFoundException("OwnerId cannot be null");
+        if (owner == null) {
+            throw new NotFoundException("Owner cannot be null");
         }
 
         Item item = new Item();
@@ -19,7 +20,7 @@ public class ItemMapper {
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
-        item.setOwnerId(ownerId);
+        item.setOwner(owner);
 
         return item;
     }
@@ -34,7 +35,7 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.isAvailable());
-        itemDto.setOwnerId(item.getOwnerId());
+        itemDto.setOwnerId(item.getOwner().getId());
 
         return itemDto;
     }
