@@ -40,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
         Item item = ItemMapper.mapToItem(itemDto, owner);
-        Long requestId = item.getRequest().getId();
+        Long requestId = itemDto.getRequestId();
 
         if (requestId != null) {
             ItemRequest itemRequest = itemRequestRepository.findById(requestId)
