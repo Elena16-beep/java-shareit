@@ -15,6 +15,8 @@ import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.dao.ItemRequestRepositoryJpa;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dao.UserRepositoryJpa;
 import java.time.LocalDateTime;
@@ -30,6 +32,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepositoryJpa userRepository;
     private final CommentRepositoryJpa commentRepository;
     private final BookingRepositoryJpa bookingRepository;
+    private final ItemRequestRepositoryJpa itemRequestRepository;
 
     @Override
     public ItemDto addItem(Long ownerId, ItemDto itemDto) {
@@ -37,6 +40,14 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
         Item item = ItemMapper.mapToItem(itemDto, owner);
+        Long requestId = item.getRequest().getId();
+
+        if (requestId != null) {
+            ItemRequest itemRequest = itemRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запрос вещи с id = " + requestId + " не найден"));
+            item.setRequest(itemRequest);
+        }
+
         item = itemRepository.save(item);
 
         return ItemMapper.mapToItemDto(item);
@@ -151,7 +162,7 @@ public class ItemServiceImpl implements ItemService {
                 itemId, authorId, LocalDateTime.now());
 
         if (!hasBooked) {
-            throw new ValidationException("Пользователь с id = " + authorId + " не брал вещь с id = " + itemId + "в аренду");
+            throw new ValidationException("Пользователь с id = " + authorId + " не брал вещь с id = " + itemId + " в аренду");
         }
 
         Comment comment = CommentMapper.mapToComment(commentDto, item, user);
