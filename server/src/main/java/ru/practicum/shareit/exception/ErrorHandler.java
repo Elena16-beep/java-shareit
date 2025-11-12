@@ -41,6 +41,15 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbiddenException(final ForbiddenException e) {
+        return new ErrorResponse(
+                "Ошибка доступа",
+                e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpected(final Throwable e) {
         return new ErrorResponse(

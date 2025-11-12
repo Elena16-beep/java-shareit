@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.exception.InternalServerException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
@@ -162,7 +162,7 @@ class BookingServiceTest {
                 item1, booker, BookingStatus.WAITING
         );
 
-        assertThrows(InternalServerException.class,
+        assertThrows(ForbiddenException.class,
                 () -> bookingService.update(user.getId(), booking.getId(), true));
     }
 

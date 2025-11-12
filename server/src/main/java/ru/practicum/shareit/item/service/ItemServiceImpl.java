@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dao.BookingRepositoryJpa;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.CommentRepositoryJpa;
@@ -60,7 +61,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Вещь с id = " + itemId + " не найдена"));
 
         if (!existingItem.getOwner().getId().equals(ownerId)) {
-            throw new NotFoundException("Редактировать вещь может только её владелец");
+            throw new ForbiddenException("Редактировать вещь может только её владелец");
         }
 
         if (itemDto.getName() != null) {

@@ -8,7 +8,7 @@ import ru.practicum.shareit.booking.dao.BookingRepositoryJpa;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
-import ru.practicum.shareit.exception.InternalServerException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.ItemRepositoryJpa;
@@ -35,22 +35,7 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemRepository.findById(bookingCreateDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Вещь с id = " + bookingCreateDto.getItemId() + " не найдена"));
 
-        if (!item.isAvailable()) {
-            throw new ValidationException("Вещь  с id = " + item.getId() + " недоступна для бронирования");
-        }
-
-        if (bookingCreateDto.getEnd().isBefore(bookingCreateDto.getStart()) ||
-                bookingCreateDto.getEnd().equals(bookingCreateDto.getStart())) {
-            throw new ValidationException("Дата начала бронирования не может быть равна или раньше даты окончания");
-        }
-
-        if (bookingCreateDto.getStart().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Дата начала бронирования не может быть в прошлом");
-        }
-
-        if (bookingCreateDto.getEnd().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Дата окончания бронирования не может быть в прошлом");
-        }
+        validateBooking(userId, item, bookingCreateDto);
 
         Booking booking = BookingMapper.mapToBooking(bookingCreateDto, item, booker);
         Booking savedBooking = bookingRepository.save(booking);
@@ -64,7 +49,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование с id = " + bookingId + " не найдено"));
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new InternalServerException("Редактировать вещь может только её владелец");
+            throw new ForbiddenException("Редактировать вещь может только её владелец");
         }
 
         validateUser(userId);
@@ -87,7 +72,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (!booking.getItem().getOwner().getId().equals(userId)
                 && !booking.getBooker().getId().equals(userId)) {
-            throw new InternalServerException("""
+            throw new ForbiddenException("""
                     Получение данных о бронировании может быть выполнено либо автором бронирования,
                     либо владельцем вещи, к которой относится бронирование
                     """
@@ -106,12 +91,13 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime currentDate = LocalDateTime.now();
 
         bookings = switch (state) {
+            case "ALL" -> bookingRepository.findAllByItemOwnerId(ownerId);
             case "CURRENT" -> bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfter(ownerId, currentDate, currentDate);
             case "PAST" -> bookingRepository.findByItemOwnerIdAndEndBefore(ownerId, currentDate);
             case "FUTURE" -> bookingRepository.findByItemOwnerIdAndStartAfter(ownerId, currentDate);
             case "WAITING" -> bookingRepository.findByItemOwnerIdAndStatus(ownerId, BookingStatus.WAITING);
             case "REJECTED" -> bookingRepository.findByItemOwnerIdAndStatus(ownerId, BookingStatus.REJECTED);
-            default -> bookingRepository.findAllByItemOwnerId(ownerId);
+            default -> throw new IllegalArgumentException("Некорректное значение состояния бронирования " + state);
         };
 
         return bookings.stream()
@@ -129,12 +115,13 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime currentDate = LocalDateTime.now();
 
         bookings = switch (state) {
+            case "ALL" -> bookingRepository.findAllByBooker(booker);
             case "CURRENT" -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(userId, currentDate, currentDate);
             case "PAST" -> bookingRepository.findByBookerIdAndEndBefore(userId, currentDate);
             case "FUTURE" -> bookingRepository.findByBookerIdAndStartAfter(userId, currentDate);
             case "WAITING" -> bookingRepository.findByBookerIdAndStatus(userId, BookingStatus.WAITING);
             case "REJECTED" -> bookingRepository.findByBookerIdAndStatus(userId, BookingStatus.REJECTED);
-            default -> bookingRepository.findAllByBooker(booker);
+            default -> throw new IllegalArgumentException("Некорректное значение состояния бронирования " + state);
         };
 
         return bookings.stream()
@@ -146,5 +133,28 @@ public class BookingServiceImpl implements BookingService {
     private void validateUser(Long ownerId) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
+    }
+
+    private void validateBooking(Long userId, Item item, BookingCreateDto bookingCreateDto) {
+        if (item.getOwner().getId().equals(userId)) {
+            throw new ValidationException("Владелец не может бронировать свою вещь");
+        }
+
+        if (!item.isAvailable()) {
+            throw new ValidationException("Вещь  с id = " + item.getId() + " недоступна для бронирования");
+        }
+
+        if (bookingCreateDto.getEnd().isBefore(bookingCreateDto.getStart()) ||
+                bookingCreateDto.getEnd().equals(bookingCreateDto.getStart())) {
+            throw new ValidationException("Дата начала бронирования не может быть равна или раньше даты окончания");
+        }
+
+        if (bookingCreateDto.getStart().isBefore(LocalDateTime.now())) {
+            throw new ValidationException("Дата начала бронирования не может быть в прошлом");
+        }
+
+        if (bookingCreateDto.getEnd().isBefore(LocalDateTime.now())) {
+            throw new ValidationException("Дата окончания бронирования не может быть в прошлом");
+        }
     }
 }
