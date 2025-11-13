@@ -1,36 +1,21 @@
 package ru.practicum.shareit.booking.mapper;
 
 import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 
 public class BookingMapper {
-    public static Booking mapToBooking(BookingCreateDto bookingCreateDto, Item item, User booker) {
+    public static Booking mapToBooking(BookingCreateDto bookingCreateDto) {
         if (bookingCreateDto == null) {
             throw new NotFoundException("BookingCreateDto cannot be null");
         }
 
-        if (item == null) {
-            throw new NotFoundException("Item cannot be null");
-        }
-
-        if (booker == null) {
-            throw new NotFoundException("Booker cannot be null");
-        }
-
         Booking booking = new Booking();
-        booking.setId(bookingCreateDto.getId());
         booking.setStart(bookingCreateDto.getStart());
         booking.setEnd(bookingCreateDto.getEnd());
-        booking.setItem(item);
-        booking.setBooker(booker);
-        booking.setStatus(BookingStatus.WAITING);
 
         return booking;
     }

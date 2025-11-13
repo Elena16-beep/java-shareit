@@ -32,18 +32,14 @@ public class BookingMapperTest {
     public void bookingDtoToBooking() {
         BookingCreateDto bookingCreateDto = new BookingCreateDto();
 
-        bookingCreateDto.setId(1L);
         bookingCreateDto.setStart(startTime);
         bookingCreateDto.setEnd(endTime);
-        bookingCreateDto.setStatus(BookingStatus.WAITING);
 
-        Booking booking = BookingMapper.mapToBooking(bookingCreateDto, item, user);
+        Booking booking = BookingMapper.mapToBooking(bookingCreateDto);
 
         assertAll(() -> {
-            assertEquals(booking.getId(), bookingCreateDto.getId());
             assertEquals(booking.getStart(), bookingCreateDto.getStart());
             assertEquals(booking.getEnd(), bookingCreateDto.getEnd());
-            assertEquals(booking.getStatus(), bookingCreateDto.getStatus());
         });
     }
 
